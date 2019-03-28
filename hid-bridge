@@ -2,7 +2,7 @@
 import select
 import argparse
 
-from tcp_interface import TCPInterface
+from udp_interface import UDPInterface
 from hid_interface import HIDInterface
 import uhid
 import logger
@@ -42,11 +42,11 @@ args = parser.parse_args()
 logger.log_level = args.log_level
 logger.log_timestamps = args.log_timestamps
 
-tcp_interface = TCPInterface(args.e)
+udp_interface = UDPInterface(args.e)
 hid_interface = HIDInterface()
 
 poller = select.poll()
-poller.register(tcp_interface.file_descriptor, select.POLLIN | select.POLLPRI)
+poller.register(udp_interface.file_descriptor, select.POLLIN | select.POLLPRI)
 poller.register(hid_interface.file_descriptor, select.POLLIN | select.POLLPRI)
 
 while True:
@@ -56,7 +56,7 @@ while True:
         if descriptor == hid_interface.file_descriptor:
             data = hid_interface.process_event()
             if data:
-                tcp_interface.write(data)
-        if descriptor == tcp_interface.file_descriptor:
-            data = tcp_interface.read(uhid.EVENT_LENGTH)
+                udp_interface.write(data)
+        if descriptor == udp_interface.file_descriptor:
+            data = udp_interface.read(uhid.EVENT_LENGTH)
             hid_interface.write_data(data)
